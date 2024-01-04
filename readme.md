@@ -22,6 +22,13 @@ book store 사이트 개발을 위한 서버 및 API 구축
 - 장바구니
 - 좋아요
 - 결제
+- 전체/카테고리별/신간 도서 조회
+  - 전체도서는 category_id가 붙지 않으면 나옵니다.
+  - query : category_id = 카테고리별로,
+  - query : new = true 값일떄 신간 리스트,
+  - query : sort = 정렬
+  - ?category_id=0&new=true&sort=recent → 카테고리0번, 신간, 최신순으로
+- 개별 도서 조회
 
 ## 프로젝트 기간
 
@@ -30,15 +37,24 @@ book store 사이트 개발을 위한 서버 및 API 구축
 ## 프로젝트 구조
 
 app.js : 서버 구동
-routes : controller의 일부로 API 경로를 설정하는 코드
+routes : API 경로를 설정
+controller : 경로에 들어오면 작성한 코드 결과를 response로 전달
 
 ```
 project-book-store
 ├─ .env
 ├─ app.js
+├─ config
+│  └─ database.js
+├─ controllers
+│  ├─ books.controller.js
+│  ├─ category.controller.js
+│  └─ users.controller.js
+├─ data.sql
 └─ routes
    ├─ books.routes.js
    ├─ carts.routes.js
+   ├─ category.routes.js
    ├─ likes.routes.js
    ├─ orders.routes.js
    └─ users.routes.js
@@ -47,3 +63,4 @@ project-book-store
 ## 이슈
 
 - 2024.01.01 : [테이블 생성이 안되는 이슈 발견](https://code-dung.tistory.com/111)
+- 2024.01.04 : [SubQuery 코드 작성 오류](https://code-dung.tistory.com/116)

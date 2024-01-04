@@ -1,24 +1,50 @@
 const express = require("express");
 const router = express.Router();
+const { body, query, param, validationResult } = require("express-validator");
+const {
+  signup,
+  signin,
+  passwrordReset,
+  passwordResetRequest
+} = require("../controllers/users.controller");
 
-router.post("/signup", (req, res) => {
-  //회원가입
-  res.json("회원가입");
-});
+const validate = (req, res, next) => {
+  const err = validationResult(req);
 
-router.post("/signin", (req, res) => {
-  //로그인
-  res.json("로그인");
-});
+  if (err.isEmpty()) return next();
+  return res.status(400).json(err.array());
+};
+
+router.post(
+  "/signup",
+  [
+    body("id").notEmpty().withMessage("아이디를 입력하세요"),
+    body("password").notEmpty().withMessage("비밀번호를 입력하세요"),
+    body("name").notEmpty().withMessage("이름을 입력하세요"),
+    validate
+  ],
+  signup
+);
+
+router.post(
+  "/signin",
+  [
+    body("id").notEmpty().withMessage("아이디를 입력하세요"),
+    body("password").notEmpty().withMessage("비밀번호를 입력하세요"),
+    validate
+  ],
+  signin
+);
 
 router
   .route("/reset")
-  .post((req, res) => {
-    //비밀번호 초기화 요청
-    res.json("비밀번호 초기화 요청");
-  })
-  .put((req, res) => {
-    //비밀번호 초기화(수정)
-    res.json("비밀번호 초기화");
-  });
+  .post([body("id").notEmpty(), validate], passwordResetRequest)
+  .put(
+    [
+      body("id").notEmpty().withMessage("아이디를 입력하지 않았습니다."),
+      body("password").notEmpty().withMessage("비밀번호를 입력하지 않았습니다"),
+      validate
+    ],
+    passwrordReset
+  );
 module.exports = router;

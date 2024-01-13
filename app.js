@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+
+const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -11,6 +13,7 @@ const cartsRouter = require("./routes/carts.routes");
 const likesRouter = require("./routes/likes.routes");
 
 app.use(express.json());
+app.use(cookieParser());
 app.use("/", usersRouter);
 app.use("/books", booksRouter);
 app.use("/category", categoryRouter);

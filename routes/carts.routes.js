@@ -1,19 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
-router
-  .route("/")
-  .get((req, res) => {
-    res.send("장바구니조회");
-  })
-  .post((req, res) => {
-    res.send("장바구니추가");
-  });
+const {
+  addToCart,
+  getCartItem,
+  deleteCartItem
+} = require("../controllers/carts.controller");
 
-router.delete("/:id", (req, res) => {
-  res.send("장바구니삭제");
-});
+router.route("/").get(getCartItem).post(addToCart);
 
-router.get("/test", (req, res) => {});
+router.delete("/:id", deleteCartItem);
 
 module.exports = router;

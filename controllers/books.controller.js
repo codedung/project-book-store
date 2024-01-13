@@ -1,5 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const conn = require("../config/database");
+const pool = require("../config/database");
 const dotevn = require("dotenv");
 dotevn.config();
 
@@ -40,8 +40,9 @@ const allBooks = async (req, res) => {
     allSelectSql += ` LIMIT ? OFFSET ?`;
     values.push(limit, offset);
   }
+
   try {
-    const [data] = await conn.query(allSelectSql, values);
+    const [data] = await pool.query(allSelectSql, values);
 
     if (data.length) {
       return res.status(StatusCodes.OK).json(data);
@@ -51,8 +52,6 @@ const allBooks = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(StatusCodes.NOT_FOUND).end();
-  } finally {
-    conn.releaseConnection();
   }
 };
 
@@ -62,11 +61,11 @@ const bookDetail = async (req, res) => {
   try {
     const bookDetailSql = `SELECT idx, title, (SELECT category_ko FROM categories WHERE categories.idx = books.category_id) AS category, 
     form, isbn, summary, detail, author, pages, contents, price, pub_date, (SELECT count(*) FROM likes WHERE book_id = idx ) AS likes, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND book_id = idx)) AS liked FROM books where idx = ?`;
-    const [[data]] = await conn.query(bookDetailSql, [user_id, book_id]);
+    const [[data]] = await pool.query(bookDetailSql, [user_id, book_id]);
 
     const imageSql =
       "SELECT image_path, main FROM book_images WHERE book_id = ?";
-    const [img] = await conn.query(imageSql, book_id);
+    const [img] = await pool.query(imageSql, book_id);
 
     data["img"] = img;
 
@@ -75,9 +74,71 @@ const bookDetail = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(StatusCodes.BAD_REQUEST).end();
-  } finally {
-    conn.releaseConnection();
   }
 };
 
-module.exports = { allBooks, bookDetail };
+const addBook = async (req, res) => {
+  const {
+    title,
+    form,
+    author,
+    isbn,
+    pages,
+    summary,
+    detail,
+    contents,
+    price,
+    pub_date,
+    images,
+    category
+  } = req.body;
+  // 도서 등록하면 category로 category_id를 받아온다.
+
+  const categorySelectSql = `SELECT idx FROM categories WHERE category_ko = ?`;
+  let category_id;
+  try {
+    [[category_id]] = await pool.query(categorySelectSql, category);
+    category_id = category_id.idx;
+  } catch (err) {
+    console.log(err);
+  }
+
+  // 받아온 id값을 추가하여 books 테이블에 정보 입력,
+  const addBookSql = `INSERT INTO books (title, category_id, form, author, isbn, pages, summary, detail, contents, price, pub_date) VALUES(?,?,?,?,?,?,?,?,?,?,?)`;
+  const addValues = [
+    title,
+    category_id,
+    form,
+    author,
+    isbn,
+    pages,
+    summary,
+    detail,
+    contents,
+    price,
+    pub_date
+  ];
+  let addResult;
+  try {
+    [addResult] = await pool.query(addBookSql, addValues);
+  } catch (err) {
+    console.log("books 등록 오류", err);
+  }
+
+  const addBookImagesSql = `INSERT INTO book_images (book_id, image_path, main) VALUES ?`;
+  const addBookImagesValues = [];
+  images.forEach((item) => {
+    addBookImagesValues.push([addResult.insertId, item.image_path, item.main]);
+  });
+
+  try {
+    await pool.query(addBookImagesSql, [addBookImagesValues]);
+  } catch (err) {
+    console.log(err);
+  }
+  // 정보 입력하면 해당 insertId 값을 받아와 book_images에 images 파일들 넣기
+  res.json({
+    message: "도서 등록"
+  });
+};
+module.exports = { allBooks, bookDetail, addBook };

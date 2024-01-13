@@ -1,5 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const conn = require("../config/database");
+const pool = require("../config/database");
 
 const addLikes = async (req, res) => {
   const { id: book_id } = req.params;
@@ -8,15 +8,12 @@ const addLikes = async (req, res) => {
   const values = [user_id, book_id];
 
   try {
-    const [result] = await conn.query(addSql, values);
+    const [result] = await pool.query(addSql, values);
     if (result.affectedRows == 0)
       return res.status(StatusCodes.BAD_REQUEST).end();
     else return res.status(StatusCodes.OK).end();
   } catch (err) {
-    console.log(err);
     return res.status(StatusCodes.BAD_REQUEST).end();
-  } finally {
-    conn.releaseConnection();
   }
 };
 
@@ -27,16 +24,12 @@ const removeLikes = async (req, res) => {
   const values = [user_id, book_id];
 
   try {
-    const [result] = await conn.query(removeSql, values);
-
+    const [result] = await pool.query(removeSql, values);
     if (result.affectedRows == 0)
       return res.status(StatusCodes.BAD_REQUEST).end();
     else return res.status(StatusCodes.OK).end();
   } catch (err) {
-    console.log(err);
     return res.status(StatusCodes.BAD_REQUEST).end();
-  } finally {
-    conn.releaseConnection();
   }
 };
 

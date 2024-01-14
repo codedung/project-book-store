@@ -11,7 +11,9 @@ const categoryRouter = require("./routes/category.routes");
 const ordersRouter = require("./routes/orders.routes");
 const cartsRouter = require("./routes/carts.routes");
 const likesRouter = require("./routes/likes.routes");
+const { auth } = require("./middleware/auth");
 
+app.use(auth);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/", usersRouter);

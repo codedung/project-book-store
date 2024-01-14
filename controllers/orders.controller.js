@@ -3,21 +3,18 @@ const pool = require("../config/database");
 const jwt = require("jsonwebtoken");
 
 const getOrderList = async (req, res) => {
-  const { token } = req.cookies;
-  let { idx: user_id } = jwt.verify(token, process.env.JWT_SECRET_STRING);
+  const { idx: user_id } = req.tokenData;
 
   const getOrderDataSql = `SELECT o.idx as id, create_at, address, receiver, contact, 
   (SELECT title FROM books WHERE idx = (SELECT book_id FROM order_books where order_id = o.idx  LIMIT 1)) as title, 
-  total_count, total_price FROM orders as o LEFT JOIN deliveries as d ON o.delivery_id = d.id WHERE o.user_id = 1 ORDER BY idx DESC`;
+  total_count, total_price FROM orders as o LEFT JOIN deliveries as d ON o.delivery_id = d.id WHERE o.user_id = ? ORDER BY idx DESC`;
   try {
     const [getOrderData] = await pool.query(getOrderDataSql, user_id);
 
     if (getOrderData.length) {
       return res.status(StatusCodes.OK).json(getOrderData);
     } else {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        message: "데이터 없음"
-      });
+      return res.status(StatusCodes.NOT_FOUND).end();
     }
   } catch (err) {
     return res.status(StatusCodes.BAD_REQUEST).end();
@@ -26,8 +23,7 @@ const getOrderList = async (req, res) => {
 
 const toOrder = async (req, res) => {
   const { delivery, orderItems, totalPrice, totalCount } = req.body;
-  const { token } = req.cookies;
-  let { idx: user_id } = jwt.verify(token, process.env.JWT_SECRET_STRING);
+  const { idx: user_id } = req.tokenData;
   let deliveryResult = "";
   let orderResult = "";
 
@@ -108,7 +104,6 @@ const deleteCartItems = async (orderItems) => {
   let cartItem = orderItems;
   let deleteCartSql = `DELETE FROM carts WHERE idx IN (?)`;
   let deleteResult;
-  console.log(cartItem);
   try {
     [deleteResult] = await pool.query(deleteCartSql, [cartItem]);
     return deleteResult.affectedRows;
@@ -118,13 +113,19 @@ const deleteCartItems = async (orderItems) => {
 };
 
 const getOrderDetail = async (req, res) => {
+  const { idx: user_id } = req.tokenData;
   const { id: order_id } = req.params;
-
-  const getDetailOrderSql = `SELECT book_id, title, author, price, count FROM order_books LEFT JOIN books ON order_books.book_id = books.idx WHERE order_id = ?`;
-
   try {
-    const [detailOrderData] = await pool.query(getDetailOrderSql, order_id);
+    const getOrderUser = `SELECT user_id FROM orders WHERE idx = ?`;
+    const [[orderUserData]] = await pool.query(getOrderUser, order_id);
+    if (orderUserData.user_id != user_id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "잘못된 접근입니다."
+      });
+    }
 
+    const getDetailOrderSql = `SELECT book_id, title, author, price, count FROM order_books LEFT JOIN books ON order_books.book_id = books.idx WHERE order_id = ?`;
+    const [detailOrderData] = await pool.query(getDetailOrderSql, order_id);
     if (detailOrderData.length) {
       return res.status(StatusCodes.OK).json(detailOrderData);
     } else {
@@ -133,7 +134,6 @@ const getOrderDetail = async (req, res) => {
       });
     }
   } catch (err) {
-    console.log(err);
     return res.status(StatusCodes.BAD_REQUEST).end();
   }
 };

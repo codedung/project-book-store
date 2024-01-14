@@ -3,7 +3,8 @@ const router = express.Router();
 const { body, query, param, validationResult } = require("express-validator");
 const {
   signup,
-  signin,
+  postSignin,
+  getSignin,
   passwrordReset,
   passwordResetRequest
 } = require("../controllers/users.controller");
@@ -20,20 +21,23 @@ router.post(
   [
     body("id").notEmpty().withMessage("아이디를 입력하세요"),
     body("password").notEmpty().withMessage("비밀번호를 입력하세요"),
-    body("name").notEmpty().withMessage("이름을 입력하세요")
+    body("name").notEmpty().withMessage("이름을 입력하세요"),
+    validate
   ],
   signup
 );
 
-router.post(
-  "/signin",
-  [
-    body("id").notEmpty().withMessage("아이디를 입력하세요"),
-    body("password").notEmpty().withMessage("비밀번호를 입력하세요"),
-    validate
-  ],
-  signin
-);
+router
+  .route("/signin")
+  .get(getSignin)
+  .post(
+    [
+      body("id").notEmpty().withMessage("아이디를 입력하세요"),
+      body("password").notEmpty().withMessage("비밀번호를 입력하세요"),
+      validate
+    ],
+    postSignin
+  );
 
 router
   .route("/reset")

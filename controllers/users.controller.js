@@ -39,10 +39,19 @@ const signup = async (req, res) => {
     return res.status(StatusCodes.BAD_REQUEST).end();
   }
 };
+const getSignin = (req, res) => {
+  const tokenData = req.tokenData;
 
-const signin = async (req, res) => {
+  if (tokenData) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
+      message: "로그인 된 상태입니다."
+    });
+  }
+};
+const postSignin = async (req, res) => {
   const { id, password } = req.body;
 
+  console.log(id, password);
   try {
     const userSelectSql = "SELECT * FROM users where id = ? ";
     const [[user]] = await pool.query(userSelectSql, id);
@@ -121,4 +130,10 @@ const passwrordReset = async (req, res) => {
   }
 };
 
-module.exports = { signup, signin, passwordResetRequest, passwrordReset };
+module.exports = {
+  signup,
+  postSignin,
+  getSignin,
+  passwordResetRequest,
+  passwrordReset
+};

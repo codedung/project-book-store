@@ -2,7 +2,8 @@ const { StatusCodes } = require("http-status-codes");
 const pool = require("../config/database");
 
 const addToCart = async (req, res) => {
-  const { user_id, book_id, count } = req.body;
+  const { idx: user_id } = req.tokenData;
+  const { book_id, count } = req.body;
   const addSql = `INSERT INTO carts (user_id, book_id, count) VALUES (?,?,?);`;
   const values = [user_id, book_id, count];
 
@@ -18,7 +19,8 @@ const addToCart = async (req, res) => {
 };
 
 const getCartItem = async (req, res) => {
-  let { user_id, selected } = req.body;
+  const { idx: user_id } = req.tokenData;
+  let { selected } = req.body;
   // selected = [1,3];
 
   let getItemSql = `SELECT c.idx, book_id, title, summary, count, price FROM carts AS c LEFT JOIN books AS b ON c.book_id = b.idx WHERE user_id = ?`;

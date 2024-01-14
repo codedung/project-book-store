@@ -57,7 +57,7 @@ const allBooks = async (req, res) => {
 
 const bookDetail = async (req, res) => {
   let { id: book_id } = req.params;
-  const { user_id } = req.body;
+  const { idx: user_id } = req.tokenData;
   try {
     const bookDetailSql = `SELECT idx, title, (SELECT category_ko FROM categories WHERE categories.idx = books.category_id) AS category, 
     form, isbn, summary, detail, author, pages, contents, price, pub_date, (SELECT count(*) FROM likes WHERE book_id = idx ) AS likes, (SELECT EXISTS (SELECT * FROM likes WHERE user_id = ? AND book_id = idx)) AS liked FROM books where idx = ?`;

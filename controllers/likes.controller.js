@@ -3,9 +3,10 @@ const pool = require("../config/database");
 
 const addLikes = async (req, res) => {
   const { id: book_id } = req.params;
-  const { user_id } = req.body;
+  const tokenData = req.tokenData;
+
   const addSql = `INSERT INTO likes (user_id, book_id) VALUES (?,?);`;
-  const values = [user_id, book_id];
+  const values = [tokenData.idx, book_id];
 
   try {
     const [result] = await pool.query(addSql, values);
@@ -19,9 +20,10 @@ const addLikes = async (req, res) => {
 
 const removeLikes = async (req, res) => {
   const { id: book_id } = req.params;
-  const { user_id } = req.body;
+  const tokenData = req.tokenData;
+
   const removeSql = `DELETE FROM likes WHERE user_id = ? AND book_id = ?`;
-  const values = [user_id, book_id];
+  const values = [tokenData.idx, book_id];
 
   try {
     const [result] = await pool.query(removeSql, values);

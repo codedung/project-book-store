@@ -41,8 +41,7 @@ routes : API 경로를 설정
 controller : 경로에 들어오면 작성한 코드 결과를 response로 전달
 
 ```
-project-book-store
-├─ .env
+Bookstore
 ├─ app.js
 ├─ config
 │  └─ database.js
@@ -54,13 +53,28 @@ project-book-store
 │  ├─ orders.controller.js
 │  └─ users.controller.js
 ├─ data.sql
-└─ routes
-   ├─ books.routes.js
-   ├─ carts.routes.js
-   ├─ category.routes.js
-   ├─ likes.routes.js
-   ├─ orders.routes.js
-   └─ users.routes.js
+├─ middleware
+│  └─ auth.js
+├─ models
+│  ├─ books.model.js
+│  ├─ bookStoreSql.js
+│  ├─ cart.model.js
+│  ├─ category.model.js
+│  ├─ likes.model.js
+│  ├─ order.model.js
+│  └─ users.model.js
+├─ package-lock.json
+├─ package.json
+├─ readme.md
+├─ services
+│  ├─ books.service.js
+│  ├─ cart.service.js
+│  ├─ category.service.js
+│  ├─ likes.service.js
+│  ├─ order.service.js
+│  └─ users.service.js
+└─ utils
+   └─ user.utils.js
 ```
 
 ## 이슈

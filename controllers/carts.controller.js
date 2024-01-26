@@ -1,59 +1,48 @@
 const { StatusCodes } = require("http-status-codes");
-const pool = require("../config/database");
+const { cartService } = require("../services/cart.service");
 
-const addToCart = async (req, res) => {
-  const { idx: user_id } = req.tokenData;
-  const { book_id, count } = req.body;
-  const addSql = `INSERT INTO carts (user_id, book_id, count) VALUES (?,?,?);`;
-  const values = [user_id, book_id, count];
+const cartProcess = {
+  addToCart: async (req, res) => {
+    const { idx: userId } = req.tokenData;
+    const addCartData = req.body;
 
-  try {
-    const [result] = await pool.query(addSql, values);
-    if (result.affectedRows == 0)
-      return res.status(StatusCodes.BAD_REQUEST).end();
-    else return res.status(StatusCodes.OK).end();
-  } catch (err) {
-    console.log(err);
-    return res.status(StatusCodes.BAD_REQUEST).end();
-  }
+    const addCartResult = await cartService.addCart(userId, addCartData);
+    if (addCartResult.success) {
+      return res.status(StatusCodes.OK).json({
+        msg: addCartResult.msg,
+      });
+    }
+    res.status(StatusCodes.BAD_REQUEST).json({
+      msg: addCartResult.msg,
+    });
+  },
+  getCartList: async (req, res) => {
+    const { idx: userId } = req.tokenData;
+    let { selected } = req.body;
+
+    const selectedCartList = await cartService.getCartList(userId, selected);
+    if (selectedCartList.success) {
+      return res.status(StatusCodes.OK).json({
+        cartList: selectedCartList.data,
+      });
+    }
+    res.status(StatusCodes.NOT_FOUND).json({
+      msg: selectedCartList.msg,
+    });
+  },
+  deleteCartItem: async (req, res) => {
+    const { id: cartId } = req.params;
+
+    const deleteItemResult = await cartService.deleteCartItem(cartId);
+    if (deleteItemResult.success) {
+      return res.status(StatusCodes.OK).json({
+        msg: deleteItemResult.msg,
+      });
+    }
+    res.status(StatusCodes.BAD_REQUEST).json({
+      msg: deleteItemResult.msg,
+    });
+  },
 };
 
-const getCartItem = async (req, res) => {
-  const { idx: user_id } = req.tokenData;
-  let { selected } = req.body;
-  // selected = [1,3];
-
-  let getItemSql = `SELECT c.idx, book_id, title, summary, count, price FROM carts AS c LEFT JOIN books AS b ON c.book_id = b.idx WHERE user_id = ?`;
-  let values = [user_id];
-  if (selected) {
-    values.push(selected);
-    getItemSql += ` AND c.idx IN (?)`;
-  }
-
-  try {
-    const [data] = await pool.query(getItemSql, values);
-
-    if (data.length) return res.status(StatusCodes.OK).json(data);
-    else return res.status(StatusCodes.NOT_FOUND).end();
-  } catch (err) {
-    console.log(err);
-    return res.status(StatusCodes.BAD_REQUEST).end();
-  }
-};
-
-const deleteCartItem = async (req, res) => {
-  const { id } = req.params;
-
-  const deleteItemSql = `DELETE FROM carts WHERE idx = ?`;
-  try {
-    const [deleteResult] = await pool.query(deleteItemSql, id);
-    if (deleteResult.affectedRows == 0)
-      return res.status(StatusCodes.NOT_FOUND).end();
-    else return res.status(StatusCodes.OK).end();
-  } catch (err) {
-    console.log(err);
-    return res.status(StatusCodes.BAD_REQUEST).end();
-  }
-};
-
-module.exports = { addToCart, getCartItem, deleteCartItem };
+module.exports = { cartProcess };

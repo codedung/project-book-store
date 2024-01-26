@@ -1,38 +1,34 @@
 const { StatusCodes } = require("http-status-codes");
-const pool = require("../config/database");
+const { likeService } = require("../services/likes.service");
 
-const addLikes = async (req, res) => {
-  const { id: book_id } = req.params;
-  const tokenData = req.tokenData;
+const likeProcess = {
+  addLikes: async (req, res) => {
+    const { id: bookId } = req.params;
+    const tokenData = req.tokenData;
 
-  const addSql = `INSERT INTO likes (user_id, book_id) VALUES (?,?);`;
-  const values = [tokenData.idx, book_id];
+    const addResult = await likeService.addLike(bookId, tokenData.idx);
+    if (addResult.success) {
+      return res.status(StatusCodes.OK).json({
+        msg: addResult.msg,
+      });
+    }
+    res.status(StatusCodes.UNAUTHORIZED).json({
+      msg: addResult.msg,
+    });
+  },
+  removeLikes: async (req, res) => {
+    const { id: bookId } = req.params;
+    const tokenData = req.tokenData;
 
-  try {
-    const [result] = await pool.query(addSql, values);
-    if (result.affectedRows == 0)
-      return res.status(StatusCodes.BAD_REQUEST).end();
-    else return res.status(StatusCodes.OK).end();
-  } catch (err) {
-    return res.status(StatusCodes.BAD_REQUEST).end();
-  }
+    const removeResult = await likeService.removeLike(bookId, tokenData.idx);
+    if (removeResult.success) {
+      return res.status(StatusCodes.OK).json({
+        msg: removeResult.msg,
+      });
+    }
+    res.status(StatusCodes.UNAUTHORIZED).json({
+      msg: removeResult.msg,
+    });
+  },
 };
-
-const removeLikes = async (req, res) => {
-  const { id: book_id } = req.params;
-  const tokenData = req.tokenData;
-
-  const removeSql = `DELETE FROM likes WHERE user_id = ? AND book_id = ?`;
-  const values = [tokenData.idx, book_id];
-
-  try {
-    const [result] = await pool.query(removeSql, values);
-    if (result.affectedRows == 0)
-      return res.status(StatusCodes.BAD_REQUEST).end();
-    else return res.status(StatusCodes.OK).end();
-  } catch (err) {
-    return res.status(StatusCodes.BAD_REQUEST).end();
-  }
-};
-
-module.exports = { addLikes, removeLikes };
+module.exports = { likeProcess };

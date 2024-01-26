@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
       // jwt가 존재하지 않음
       if (err instanceof jwt.TokenExpiredError) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: "로그인 세션이 만료되었습니다."
+          message: "로그인 세션이 만료되었습니다.",
         });
       }
     }
